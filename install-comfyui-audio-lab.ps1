@@ -1,5 +1,16 @@
-# ComfyUI 自定义节点批量安装脚本
+﻿# ComfyUI 自定义节点批量安装脚本
 # 使用方式：在 PowerShell 中运行此脚本，按提示操作即可
+
+# Windows PowerShell 5.1 会按 BOM 判断 .ps1 编码；本文件保留 UTF-8 BOM 以避免中文乱码。
+try {
+    chcp.com 65001 | Out-Null
+    $utf8Encoding = New-Object System.Text.UTF8Encoding -ArgumentList $false
+    [Console]::InputEncoding = $utf8Encoding
+    [Console]::OutputEncoding = $utf8Encoding
+    $OutputEncoding = $utf8Encoding
+} catch {
+    # 编码设置失败时继续执行，不影响安装主流程。
+}
 
 # 1. 检查 git 是否可用
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
