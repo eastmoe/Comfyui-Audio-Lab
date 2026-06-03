@@ -83,6 +83,64 @@ if ($pythonCandidates.Count -eq 0) {
 
 Write-Host "使用的 Python 路径: $pythonExe" -ForegroundColor Cyan
 
+function Install-IndexTTS2PyniniWheel {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PythonExe
+    )
+
+    $pyniniWheelUrls = @{
+        "3.10" = "https://github.com/billwuhao/pynini-windows-wheels/releases/download/v2.1.6.post1/pynini-2.1.6.post1-cp310-cp310-win_amd64.whl"
+        "3.11" = "https://github.com/billwuhao/pynini-windows-wheels/releases/download/v2.1.6.post1/pynini-2.1.6.post1-cp311-cp311-win_amd64.whl"
+        "3.12" = "https://github.com/billwuhao/pynini-windows-wheels/releases/download/v2.1.6.post1/pynini-2.1.6.post1-cp312-cp312-win_amd64.whl"
+        "3.13" = "https://github.com/billwuhao/pynini-windows-wheels/releases/download/v2.1.6.post1/pynini-2.1.6.post1-cp313-cp313-win_amd64.whl"
+    }
+
+    Write-Host "准备为 Light-IndexTTS2 预安装 Windows pynini wheel..." -ForegroundColor Cyan
+
+    $pythonInfo = & $PythonExe -c "import platform, sys; print(f'{sys.version_info.major}.{sys.version_info.minor}|{platform.system()}|{platform.machine()}|{sys.maxsize > 2**32}')"
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($pythonInfo)) {
+        Write-Host "无法检测 Python 版本信息，跳过 pynini 预安装。" -ForegroundColor Yellow
+        return
+    }
+
+    $parts = $pythonInfo.Trim().Split('|')
+    if ($parts.Count -lt 4) {
+        Write-Host "Python 版本信息格式异常，跳过 pynini 预安装: $pythonInfo" -ForegroundColor Yellow
+        return
+    }
+
+    $pythonVersion = $parts[0]
+    $platformSystem = $parts[1]
+    $platformMachine = $parts[2].ToLowerInvariant()
+    $is64Bit = ($parts[3] -eq "True")
+
+    if ($platformSystem -ne "Windows" -or -not $is64Bit -or $platformMachine -notin @("amd64", "x86_64")) {
+        Write-Host "当前环境不是 64 位 Windows，跳过 pynini Windows wheel 预安装。" -ForegroundColor Yellow
+        return
+    }
+
+    if (-not $pyniniWheelUrls.ContainsKey($pythonVersion)) {
+        Write-Host "当前 Python $pythonVersion 没有预设的 pynini wheel，跳过预安装。" -ForegroundColor Yellow
+        return
+    }
+
+    & $PythonExe -c "import pynini" 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "已检测到 pynini，可跳过预安装。" -ForegroundColor Green
+        return
+    }
+
+    $wheelUrl = $pyniniWheelUrls[$pythonVersion]
+    Write-Host "正在安装匹配的 pynini wheel: $wheelUrl"
+    & $PythonExe -m pip install $wheelUrl
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "pynini wheel 安装失败，后续 WeTextProcessing 依赖安装可能仍会失败。" -ForegroundColor Red
+    } else {
+        Write-Host "pynini wheel 预安装成功。" -ForegroundColor Green
+    }
+}
+
 # 5. 要安装的仓库列表
 $repos = @(
     "https://github.com/eastmoe/ComfyUI-Audio-DSP",
@@ -119,6 +177,10 @@ foreach ($repoUrl in $repos) {
     # 安装依赖
     $reqFile = Join-Path $targetPath "requirements.txt"
     if (Test-Path $reqFile) {
+        if ($repoName -eq "ComfyUI-Light-IndexTTS2") {
+            Install-IndexTTS2PyniniWheel -PythonExe $pythonExe
+        }
+
         Write-Host "检测到 requirements.txt，正在安装依赖（使用中科大镜像）..."
         & $pythonExe -m pip install -r $reqFile --index-url https://mirrors.ustc.edu.cn/pypi/simple
         if ($LASTEXITCODE -ne 0) {
