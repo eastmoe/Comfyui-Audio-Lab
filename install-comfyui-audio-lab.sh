@@ -119,6 +119,7 @@ echo -e "${CYAN}使用的 Python 路径: $python_exe${NC}"
 
 # 3. 仓库列表
 repos=(
+    "https://github.com/eastmoe/ComfyUI-Song-Analyst"
     "https://github.com/eastmoe/ComfyUI-Audio-DSP"
     "https://github.com/eastmoe/ComfyUI-MSST"
     "https://github.com/eastmoe/ComfyUI-so-vits-svc"

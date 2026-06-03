@@ -169,6 +169,7 @@ function Install-IndexTTS2Dependencies {
 
 # 5. 要安装的仓库列表
 $repos = @(
+    "https://github.com/eastmoe/ComfyUI-Song-Analyst",
     "https://github.com/eastmoe/ComfyUI-Audio-DSP",
     "https://github.com/eastmoe/ComfyUI-MSST",
     "https://github.com/eastmoe/ComfyUI-so-vits-svc",

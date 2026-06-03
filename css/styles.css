@@ -94,6 +94,7 @@
         }
 
         /* 分类标签颜色 */
+        .cat-analysis { --cat: #2F9D9A; }
         .cat-processing { --cat: #E8863A; }
         .cat-cover { --cat: #E85D75; }
         .cat-song { --cat: #3AAE8B; }

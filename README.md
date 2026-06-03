@@ -1,6 +1,6 @@
 # Comfyui Audio Lab
 
-一个零依赖静态宣传 Web 项目，用于展示 eastmoe 的 ComfyUI 音频节点生态：DSP、SVC、歌曲生成、ASR 字幕、MSST 分离修复、TTS 与 LLM 编排。
+一个零依赖静态宣传 Web 项目，用于展示 eastmoe 的 ComfyUI 音频节点生态：音乐分析、DSP、SVC、歌曲生成、ASR 字幕、MSST 分离修复、TTS 与 LLM 编排。
 
 ## Local Preview
 
@@ -14,6 +14,7 @@ python3 -m http.server 4173
 
 | 名称 | 作用 | URL |
 | --- | --- | --- |
+| Song Analyst | 轻量音乐分析节点，输出 BPM、节拍、调性、和弦、结构分段、旋律 F0、情绪/风格标签与相似度结果。 | https://github.com/eastmoe/ComfyUI-Song-Analyst |
 | Audio DSP | 专业音频信号处理节点集，覆盖均衡器、压缩器、混响、延迟、限制器等细节调控。 | https://github.com/eastmoe/ComfyUI-Audio-DSP |
 | MSST | 音频源分离、人声/伴奏/和声/混响/乐器分离、音频修复与高清化、歌声转 MIDI。 | https://github.com/eastmoe/ComfyUI-MSST |
 | So-VITS-SVC | 基于 So-VITS-SVC 的 AI 声音转换节点，支持声音克隆与 AI 翻唱。 | https://github.com/eastmoe/ComfyUI-so-vits-svc |
