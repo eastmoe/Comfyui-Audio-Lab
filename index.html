@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Comfyui Audio Lab unifies eastmoe ComfyUI audio nodes for DSP, voice conversion, song generation, ASR, source separation, TTS, and LLM orchestration."
+    />
+    <meta property="og:title" content="Comfyui Audio Lab" />
+    <meta
+      property="og:description"
+      content="一组围绕 ComfyUI 原生 AUDIO 规范、低依赖工程实践和网络友好模型加载设计的音频节点。"
+    />
+    <meta property="og:image" content="/public/audio-lab-hero.webp" />
+    <meta name="theme-color" content="#f7f8f5" />
+    <title>Comfyui Audio Lab</title>
+    <link rel="preload" href="/public/audio-lab-hero.webp" as="image" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
+
+    <header class="site-header" aria-label="主导航">
+      <a class="brand" href="#top" aria-label="Comfyui Audio Lab 首页">
+        <span class="brand-mark">CAL</span>
+        <span>Comfyui Audio Lab</span>
+      </a>
+      <nav class="nav-links" aria-label="页面区域">
+        <a href="#workflow">Workflow</a>
+        <a href="#nodes">Nodes</a>
+        <a href="#principles">Principles</a>
+      </nav>
+      <a class="github-pill" href="https://github.com/eastmoe" target="_blank" rel="noreferrer">
+        GitHub
+      </a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-media" aria-hidden="true">
+          <img src="/public/audio-lab-hero.webp" alt="" />
+        </div>
+        <div class="hero-content">
+          <p class="eyebrow">ComfyUI audio nodes by eastmoe</p>
+          <h1 id="hero-title">Comfyui Audio Lab</h1>
+          <p class="hero-copy">
+            把信号处理、AI 翻唱、歌曲生成、转录字幕、音源分离、TTS 与 LLM 编排统一成一条可组合的 ComfyUI 音频工作流。
+          </p>
+          <div class="hero-actions" aria-label="主要链接">
+            <a class="primary-action" href="#workflow">Explore Workflow</a>
+            <a class="secondary-action" href="#nodes">View Nodes</a>
+          </div>
+          <div class="signal-strip" aria-label="设计关键词">
+            <span>Native AUDIO</span>
+            <span>Compatibility Shims</span>
+            <span>HF / Mirror / Proxy</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="workflow-band" id="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading">
+          <p class="eyebrow">Connected system</p>
+          <h2 id="workflow-title">从一个节点包，扩展成完整音频实验室</h2>
+        </div>
+
+        <div class="workflow-shell">
+          <div class="node-map" role="list" aria-label="音频节点项目">
+            <button class="node-button is-active" type="button" data-project="audio-dsp" role="listitem">
+              <span class="node-glyph">ƒ</span>
+              <span>Audio-DSP</span>
+            </button>
+            <button class="node-button" type="button" data-project="msst" role="listitem">
+              <span class="node-glyph">∿</span>
+              <span>MSST</span>
+            </button>
+            <button class="node-button" type="button" data-project="song" role="listitem">
+              <span class="node-glyph">♪</span>
+              <span>SongGeneration</span>
+            </button>
+            <button class="node-button" type="button" data-project="sovits" role="listitem">
+              <span class="node-glyph">V</span>
+              <span>so-vits-svc</span>
+            </button>
+            <button class="node-button" type="button" data-project="ddsp" role="listitem">
+              <span class="node-glyph">D</span>
+              <span>DDSP-SVC</span>
+            </button>
+            <button class="node-button" type="button" data-project="mimoasr" role="listitem">
+              <span class="node-glyph">S</span>
+              <span>MIMOASR</span>
+            </button>
+            <button class="node-button" type="button" data-project="indextts2" role="listitem">
+              <span class="node-glyph">T</span>
+              <span>IndexTTS2</span>
+            </button>
+            <button class="node-button" type="button" data-project="qwen3" role="listitem">
+              <span class="node-glyph">Q</span>
+              <span>Qwen3-TTS</span>
+            </button>
+            <button class="node-button" type="button" data-project="llm" role="listitem">
+              <span class="node-glyph">L</span>
+              <span>Simple-LLM</span>
+            </button>
+          </div>
+
+          <article class="project-focus" aria-live="polite">
+            <div class="focus-topline">
+              <span class="status-dot"></span>
+              <span id="focusType">Signal detail layer</span>
+            </div>
+            <h3 id="focusName">ComfyUI-Audio-DSP</h3>
+            <p id="focusSummary">
+              负责音频与信号细节处理，把增益、动态、路由、分析、空间与工具类处理拆成可复用节点。
+            </p>
+            <div class="focus-meta">
+              <div>
+                <span class="meta-label">Role</span>
+                <strong id="focusRole">Polish / Measure / Route</strong>
+              </div>
+              <div>
+                <span class="meta-label">Pairs With</span>
+                <strong id="focusPairs">MSST, TTS, SVC</strong>
+              </div>
+            </div>
+            <a id="focusLink" class="repo-link" href="https://github.com/eastmoe/ComfyUI-Audio-DSP" target="_blank" rel="noreferrer">
+              Open Repository
+            </a>
+          </article>
+        </div>
+      </section>
+
+      <section class="lab-strip" aria-label="组合工作流">
+        <button class="combo is-active" type="button" data-combo="0">
+          <span>Idea</span>
+          <strong>LLM → Song → MSST → SVC → DSP → ASR</strong>
+        </button>
+        <button class="combo" type="button" data-combo="1">
+          <span>Voice</span>
+          <strong>LLM → TTS → DSP → Subtitles</strong>
+        </button>
+        <button class="combo" type="button" data-combo="2">
+          <span>Remix</span>
+          <strong>MSST → Repair → MIDI → Cover</strong>
+        </button>
+      </section>
+
+      <section class="nodes-section" id="nodes" aria-labelledby="nodes-title">
+        <div class="section-heading">
+          <p class="eyebrow">Project matrix</p>
+          <h2 id="nodes-title">每个项目只处理自己最擅长的那一层</h2>
+        </div>
+        <div class="project-grid" id="projectGrid"></div>
+      </section>
+
+      <section class="principles" id="principles" aria-labelledby="principles-title">
+        <div class="principle-lead">
+          <p class="eyebrow">Engineering style</p>
+          <h2 id="principles-title">功能拆分、简化依赖、网络友好</h2>
+          <p>
+            Comfyui Audio Lab 的价值不只是节点数量，而是把大模型音频链路拆成可独立维护、可互相组合、可在不同本地环境里运行的工程单元。
+          </p>
+        </div>
+        <div class="principle-grid">
+          <article>
+            <span class="principle-index">01</span>
+            <h3>功能拆分</h3>
+            <p>每个节点只做自己该做的事情，围绕 ComfyUI 原生音频规范传递数据，避免把推理、修复、路由和展示揉成一个不可维护的黑盒。</p>
+          </article>
+          <article>
+            <span class="principle-index">02</span>
+            <h3>简化依赖</h3>
+            <p>面向 transformers、torch、numpy 等版本差异设置兼容层，优先使用本地 patch、标准库替代与 ComfyUI 已有依赖，减少安装阻力。</p>
+          </article>
+          <article>
+            <span class="principle-index">03</span>
+            <h3>网络友好</h3>
+            <p>模型可从 Hugging Face 或 hf-mirror 获取，也支持关闭 SSL 证书验证与自定义反向代理，让节点在复杂网络环境里仍然可用。</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Comfyui Audio Lab</span>
+      <a href="https://github.com/eastmoe" target="_blank" rel="noreferrer">eastmoe on GitHub</a>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
