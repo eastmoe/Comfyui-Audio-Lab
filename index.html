@@ -92,11 +92,11 @@
             9 个专业音频节点，覆盖信号处理、AI 翻唱、歌曲生成、语音转录、源分离、语音合成与 LLM 调用——在 ComfyUI 中构建端到端音频工作流
         </p>
         <div class="reveal reveal-delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="#nodes" class="px-8 py-3.5 rounded-full font-heading font-600 text-sm text-white transition-all hover:scale-105 hover:shadow-lg" style="background: linear-gradient(135deg, var(--accent), #D4533B); box-shadow: 0 4px 24px var(--accent-glow);" data-i18n="hero_cta1">
-                探索节点生态
+            <a href="#install" class="px-8 py-3.5 rounded-full font-heading font-600 text-sm text-white transition-all hover:scale-105 hover:shadow-lg flex items-center gap-2" style="background: linear-gradient(135deg, var(--accent), #D4533B); box-shadow: 0 4px 24px var(--accent-glow);">
+                <i class="fa-solid fa-download"></i> <span data-i18n="hero_cta2">一键安装</span>
             </a>
-            <a href="https://github.com/stars/eastmoe/lists/comfyui-audio-lab" target="_blank" class="px-8 py-3.5 rounded-full font-heading font-600 text-sm border dark:border-white/15 border-black/15 dark:hover:bg-white/5 hover:bg-black/5 transition-all hover:scale-105 flex items-center gap-2">
-                <i class="fa-brands fa-github"></i> <span data-i18n="hero_cta2">GitHub 插件列表</span>
+            <a href="#nodes" class="px-8 py-3.5 rounded-full font-heading font-600 text-sm border dark:border-white/15 border-black/15 dark:hover:bg-white/5 hover:bg-black/5 transition-all hover:scale-105" data-i18n="hero_cta1">
+                探索节点生态
             </a>
         </div>
     </div>
@@ -201,18 +201,40 @@
 </section>
 
 <!-- CTA 区域 -->
-<section class="py-24 sm:py-32 relative overflow-hidden">
+<section id="install" class="py-24 sm:py-32 relative overflow-hidden scroll-mt-20">
     <div class="absolute inset-0" style="background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);"></div>
-    <div class="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+    <div class="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
         <h2 class="reveal font-heading font-800 text-3xl sm:text-5xl tracking-tight mb-6" data-i18n="cta_title">开始构建你的音频工作流</h2>
         <p class="reveal reveal-delay-1 dark:text-white/55 text-black/55 text-lg mb-10" data-i18n="cta_desc">所有节点开箱即用，在 ComfyUI 中安装即可开始</p>
-        <div class="reveal reveal-delay-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="https://github.com/stars/eastmoe/lists/comfyui-audio-lab" target="_blank" class="px-8 py-3.5 rounded-full font-heading font-600 text-sm text-white transition-all hover:scale-105" style="background: linear-gradient(135deg, var(--accent), #D4533B); box-shadow: 0 4px 24px var(--accent-glow);">
-                <i class="fa-brands fa-github mr-2"></i><span data-i18n="cta_btn1">查看全部仓库</span>
-            </a>
-            <button onclick="copyInstallCommand()" class="px-8 py-3.5 rounded-full font-heading font-600 text-sm border dark:border-white/15 border-black/15 dark:hover:bg-white/5 hover:bg-black/5 transition-all hover:scale-105 flex items-center gap-2">
-                <i class="fa-solid fa-copy"></i> <span data-i18n="cta_btn2">复制安装命令</span>
-            </button>
+        <div id="installCommands" class="reveal reveal-delay-2 max-w-4xl mx-auto text-left">
+            <div class="inline-flex w-full sm:w-auto p-1 rounded-xl dark:bg-black/35 bg-black/[0.04] border dark:border-white/10 border-black/10 mb-4">
+                <button type="button" class="install-os-tab flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-heading font-600 text-xs sm:text-sm transition-all inline-flex items-center justify-center gap-2" data-install-os="windows">
+                    <i class="fa-brands fa-windows"></i><span data-i18n="install_windows">Windows</span>
+                </button>
+                <button type="button" class="install-os-tab flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-heading font-600 text-xs sm:text-sm transition-all inline-flex items-center justify-center gap-2" data-install-os="linux">
+                    <i class="fa-brands fa-linux"></i><span data-i18n="install_linux">Linux</span>
+                </button>
+                <button type="button" class="install-os-tab flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-heading font-600 text-xs sm:text-sm transition-all inline-flex items-center justify-center gap-2" data-install-os="macos">
+                    <i class="fa-brands fa-apple"></i><span data-i18n="install_macos">Mac OS</span>
+                </button>
+            </div>
+            <article class="p-5 rounded-2xl dark:bg-white/[0.04] bg-white border dark:border-white/10 border-black/10">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style="background: var(--accent-subtle); color: var(--accent);">
+                            <i id="installOsIcon" class="fa-brands fa-windows"></i>
+                        </div>
+                        <h3 id="installOsTitle" class="font-heading font-700 text-base">Windows</h3>
+                    </div>
+                    <span class="text-xs dark:text-white/40 text-black/45" data-i18n="install_detected">复制命令，在终端里执行</span>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-3 rounded-xl dark:bg-black/35 bg-black/[0.04] border dark:border-white/8 border-black/8 p-3">
+                    <code id="installCommand" class="install-command flex-1 text-xs sm:text-sm dark:text-white/70 text-black/70 leading-relaxed break-all"></code>
+                    <button type="button" id="copyInstallCommand" class="shrink-0 px-4 py-2.5 rounded-lg font-heading font-600 text-xs text-white transition-all hover:scale-105 inline-flex items-center justify-center gap-2" style="background: linear-gradient(135deg, var(--accent), #D4533B);">
+                        <i class="fa-solid fa-copy"></i><span data-i18n="install_copy">复制</span>
+                    </button>
+                </div>
+            </article>
         </div>
     </div>
 </section>

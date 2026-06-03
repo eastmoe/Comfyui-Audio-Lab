@@ -53,6 +53,15 @@
         .wf-tab { transition: all 0.3s; cursor: pointer; }
         .wf-tab.active { color: var(--accent); border-color: var(--accent); }
 
+        /* 安装系统切换 */
+        .install-os-tab { cursor: pointer; opacity: 0.64; }
+        .install-os-tab.active {
+            color: #fff;
+            opacity: 1;
+            background: linear-gradient(135deg, var(--accent), #D4533B);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
         /* 理念卡片图标 */
         .phil-icon {
             width: 56px; height: 56px; border-radius: 16px;

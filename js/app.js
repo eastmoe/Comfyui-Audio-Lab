@@ -7,7 +7,7 @@ const T = {
         hero_badge: '为 ComfyUI 打造的完整音频生态',
         hero_subtitle: '9 个专业音频节点，覆盖信号处理、AI 翻唱、歌曲生成、语音转录、源分离、语音合成与 LLM 调用——在 ComfyUI 中构建端到端音频工作流',
         hero_cta1: '探索节点生态',
-        hero_cta2: 'GitHub 组织',
+        hero_cta2: '一键安装',
         stat_nodes: '专业节点',
         stat_categories: '功能领域',
         stat_extra_deps: '额外依赖冲突',
@@ -29,8 +29,11 @@ const T = {
         wf_tab2: '语音克隆与合成',
         cta_title: '开始构建你的音频工作流',
         cta_desc: '所有节点开箱即用，在 ComfyUI 中安装即可开始',
-        cta_btn1: '查看全部仓库',
-        cta_btn2: '复制安装命令',
+        install_windows: 'Windows',
+        install_linux: 'Linux',
+        install_macos: 'Mac OS',
+        install_copy: '复制',
+        install_detected: '复制命令，在终端里执行',
         footer_desc: '为 ComfyUI 打造的专业音频处理节点集合，覆盖从信号处理到 AI 合成的完整链路。',
         footer_cat1: '核心节点',
         footer_cat2: 'AI 翻唱与 TTS',
@@ -88,7 +91,7 @@ const T = {
         hero_badge: 'A complete audio ecosystem for ComfyUI',
         hero_subtitle: '9 professional audio nodes covering signal processing, AI cover, song generation, speech transcription, source separation, speech synthesis & LLM — build end-to-end audio workflows in ComfyUI',
         hero_cta1: 'Explore Nodes',
-        hero_cta2: 'GitHub Org',
+        hero_cta2: 'One-Click Install',
         stat_nodes: 'Specialized Nodes',
         stat_categories: 'Domains',
         stat_extra_deps: 'Dependency Conflicts',
@@ -110,8 +113,11 @@ const T = {
         wf_tab2: 'Voice Clone & Synth',
         cta_title: 'Start Building Your Audio Workflow',
         cta_desc: 'All nodes work out of the box — install in ComfyUI and get started',
-        cta_btn1: 'View All Repos',
-        cta_btn2: 'Copy Install Command',
+        install_windows: 'Windows',
+        install_linux: 'Linux',
+        install_macos: 'Mac OS',
+        install_copy: 'Copy',
+        install_detected: 'Copy command and run it in terminal',
         footer_desc: 'Professional audio processing node collection for ComfyUI, covering the full pipeline from signal processing to AI synthesis.',
         footer_cat1: 'Core Nodes',
         footer_cat2: 'AI Cover & TTS',
@@ -215,6 +221,7 @@ const workflows = [
 let currentLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
 let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 let currentWf = 0;
+let currentInstallOS = detectUserOS();
 
 // ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -264,6 +271,7 @@ function applyLang(lang) {
     // 重新渲染节点和工作流（因为部分内容不在 i18n 系统中）
     renderNodes();
     renderWorkflow(currentWf);
+    renderInstallCommands();
     localStorage.setItem('lang', lang);
     updateLangButtons();
 }
@@ -503,24 +511,99 @@ function bindEvents() {
             renderWorkflow(parseInt(tab.dataset.wf));
         });
     });
+
+    // 一键安装系统切换
+    document.querySelectorAll('[data-install-os]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setInstallOS(btn.dataset.installOs);
+        });
+    });
+
+    // 一键安装命令复制
+    document.getElementById('copyInstallCommand').addEventListener('click', () => {
+        copyInstallCommand();
+    });
 }
 
-// ==================== 复制安装命令 ====================
+// ==================== 一键安装命令 ====================
+function detectUserOS() {
+    const platform = [
+        navigator.userAgentData && navigator.userAgentData.platform,
+        navigator.platform,
+        navigator.userAgent
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    if (platform.includes('win')) return 'windows';
+    if (platform.includes('mac')) return 'macos';
+    return 'linux';
+}
+
+function getInstallScriptUrl(fileName) {
+    return new URL(fileName, window.location.href).href;
+}
+
+function escapeDoubleQuotes(value) {
+    return value.replace(/"/g, '\\"');
+}
+
+function getInstallCommand(os) {
+    const shellScriptUrl = escapeDoubleQuotes(getInstallScriptUrl('install-comfyui-audio-lab.sh'));
+    const powershellScriptUrl = escapeDoubleQuotes(getInstallScriptUrl('install-comfyui-audio-lab.ps1'));
+
+    if (os === 'windows') {
+        return `$p=Join-Path $env:TEMP "install-comfyui-audio-lab.ps1"; Invoke-WebRequest "${powershellScriptUrl}" -OutFile $p; powershell -ExecutionPolicy Bypass -File $p`;
+    }
+
+    return `tmp="$(mktemp)" && curl -fsSL "${shellScriptUrl}" -o "$tmp" && bash "$tmp"; rm -f "$tmp"`;
+}
+
+function setInstallOS(os) {
+    currentInstallOS = os;
+    renderInstallCommands();
+}
+
+function renderInstallCommands() {
+    const osMeta = {
+        windows: { titleKey: 'install_windows', icon: 'fa-windows' },
+        linux: { titleKey: 'install_linux', icon: 'fa-linux' },
+        macos: { titleKey: 'install_macos', icon: 'fa-apple' },
+    };
+    const meta = osMeta[currentInstallOS] || osMeta.linux;
+    const title = document.getElementById('installOsTitle');
+    const icon = document.getElementById('installOsIcon');
+    const command = document.getElementById('installCommand');
+
+    if (title) title.textContent = T[currentLang][meta.titleKey];
+    if (icon) icon.className = `fa-brands ${meta.icon}`;
+    if (command) command.textContent = getInstallCommand(currentInstallOS);
+
+    document.querySelectorAll('[data-install-os]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.installOs === currentInstallOS);
+    });
+}
+
 function copyInstallCommand() {
-    const repos = nodes.map(n => `https://github.com/eastmoe/${n.repo}`);
-    const cmd = repos.map(r => `comfy-cli install-node ${r}`).join('\n');
+    const cmd = getInstallCommand(currentInstallOS);
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        copyTextFallback(cmd);
+        return;
+    }
+
     navigator.clipboard.writeText(cmd).then(() => {
         showToast(T[currentLang].toast_copied);
     }).catch(() => {
-        // 降级方案
-        const ta = document.createElement('textarea');
-        ta.value = cmd;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast(T[currentLang].toast_copied);
+        copyTextFallback(cmd);
     });
+}
+
+function copyTextFallback(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(T[currentLang].toast_copied);
 }
 
 // ==================== Toast ====================

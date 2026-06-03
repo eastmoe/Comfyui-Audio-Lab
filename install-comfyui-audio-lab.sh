@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# ComfyUI 自定义节点批量安装脚本 (Linux)
-# 用法: bash install_nodes.sh
+# ComfyUI 自定义节点批量安装脚本 (Linux / macOS)
+# 用法: bash install-comfyui-audio-lab.sh
 
 set -euo pipefail
 
@@ -39,23 +39,54 @@ fi
 # 搜索范围：comfy_root 下的一级子目录，以及 comfy_root 的父目录下的一级子目录
 candidates=()
 
-# 在 comfy_root 下一级子目录中查找 python/python3
-while IFS= read -r -d '' file; do
+add_python_candidate() {
+    local file="$1"
     if [ -x "$file" ] && [[ "$(basename "$file")" == python || "$(basename "$file")" == python3 ]]; then
         candidates+=("$file")
     fi
-done < <(find "$comfy_root" -maxdepth 3 -type f \( -name python -o -name python3 \) -print0 2>/dev/null)
+}
+
+collect_python_candidates() {
+    local root="$1"
+    local include_root="$2"
+    local file
+
+    if [ "$include_root" = true ]; then
+        for file in "$root"/python "$root"/python3; do
+            add_python_candidate "$file"
+        done
+    fi
+
+    for file in \
+        "$root"/*/python "$root"/*/python3 \
+        "$root"/*/*/python "$root"/*/*/python3 \
+        "$root"/*/*/*/python "$root"/*/*/*/python3; do
+        add_python_candidate "$file"
+    done
+}
+
+# 在 comfy_root 下查找 python/python3
+collect_python_candidates "$comfy_root" true
 
 # 在父目录下一级子目录中查找
 parent_dir="$(dirname "$comfy_root")"
-while IFS= read -r -d '' file; do
-    if [ -x "$file" ] && [[ "$(basename "$file")" == python || "$(basename "$file")" == python3 ]]; then
-        candidates+=("$file")
-    fi
-done < <(find "$parent_dir" -maxdepth 3 -mindepth 1 -type f \( -name python -o -name python3 \) -print0 2>/dev/null)
+collect_python_candidates "$parent_dir" false
 
-# 去重
-mapfile -t candidates < <(printf "%s\n" "${candidates[@]}" | sort -u)
+# 去重。macOS 默认 bash 版本较旧，不使用 mapfile。
+deduped_candidates=()
+for candidate in "${candidates[@]}"; do
+    exists=false
+    for existing in "${deduped_candidates[@]}"; do
+        if [ "$existing" = "$candidate" ]; then
+            exists=true
+            break
+        fi
+    done
+    if [ "$exists" = false ]; then
+        deduped_candidates+=("$candidate")
+    fi
+done
+candidates=("${deduped_candidates[@]}")
 
 # 选择 Python
 if [ ${#candidates[@]} -eq 0 ]; then
