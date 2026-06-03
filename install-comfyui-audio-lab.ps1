@@ -83,6 +83,74 @@ if ($pythonCandidates.Count -eq 0) {
 
 Write-Host "使用的 Python 路径: $pythonExe" -ForegroundColor Cyan
 
+function Repair-PyniniPackageVersion {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PythonExe
+    )
+
+    $repairScriptLines = @(
+        "import csv"
+        "import importlib.metadata as metadata"
+        "import io"
+        "import re"
+        "import sys"
+        "from pathlib import Path"
+        ""
+        "try:"
+        "    dist = metadata.distribution('pynini')"
+        "except metadata.PackageNotFoundError:"
+        "    print('pynini is not installed')"
+        "    sys.exit(1)"
+        ""
+        "dist_info = Path(getattr(dist, '_path', '') or '')"
+        "metadata_file = dist_info / 'METADATA'"
+        "if not metadata_file.exists():"
+        "    root = Path(dist.locate_file(''))"
+        "    matches = sorted(root.glob('pynini-*.dist-info/METADATA'))"
+        "    metadata_file = matches[0] if matches else metadata_file"
+        ""
+        "if not metadata_file.exists():"
+        "    print('pynini METADATA file was not found')"
+        "    sys.exit(1)"
+        ""
+        "data = metadata_file.read_bytes()"
+        "version_match = re.search(br'(?m)^Version: ([^\r\n]+)', data)"
+        "metadata_version = version_match.group(1).decode('ascii', 'replace') if version_match else ''"
+        "if metadata_version == '2.1.6':"
+        "    print('pynini metadata version is already 2.1.6')"
+        "    sys.exit(0)"
+        ""
+        "if metadata_version != '2.1.6.post1':"
+        "    print('unexpected pynini metadata version: {}'.format(dist.version))"
+        "    sys.exit(1)"
+        ""
+        "metadata_file.write_bytes(re.sub(br'(?m)^Version: 2\.1\.6\.post1$', b'Version: 2.1.6', data, count=1))"
+        ""
+        "record_file = metadata_file.with_name('RECORD')"
+        "if record_file.exists():"
+        "    rows = list(csv.reader(io.StringIO(record_file.read_text(encoding='utf-8', newline=''))))"
+        "    output = io.StringIO()"
+        "    writer = csv.writer(output, lineterminator='\n')"
+        "    metadata_rel = metadata_file.relative_to(metadata_file.parent.parent).as_posix()"
+        "    for row in rows:"
+        "        if row and row[0].replace('\\\\', '/') == metadata_rel:"
+        "            row = [row[0], '', '']"
+        "        writer.writerow(row)"
+        "    record_file.write_text(output.getvalue(), encoding='utf-8', newline='')"
+        ""
+        "print('pynini metadata version changed from 2.1.6.post1 to 2.1.6')"
+    )
+
+    Write-Host "正在将 pynini 包元数据版本修正为 2.1.6，以满足 WeTextProcessing 依赖声明..."
+    & $PythonExe -c ($repairScriptLines -join "`n")
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "pynini 版本元数据修正失败，后续依赖解析可能仍会认为版本不匹配。" -ForegroundColor Red
+    } else {
+        Write-Host "pynini 版本元数据修正完成。" -ForegroundColor Green
+    }
+}
+
 function Install-IndexTTS2PyniniWheel {
     param(
         [Parameter(Mandatory = $true)]
@@ -128,6 +196,7 @@ function Install-IndexTTS2PyniniWheel {
     & $PythonExe -c "import pynini" 2>$null
     if ($LASTEXITCODE -eq 0) {
         Write-Host "已检测到 pynini，可跳过预安装。" -ForegroundColor Green
+        Repair-PyniniPackageVersion -PythonExe $PythonExe
         return
     }
 
@@ -138,6 +207,7 @@ function Install-IndexTTS2PyniniWheel {
         Write-Host "pynini wheel 安装失败，后续 WeTextProcessing 依赖安装可能仍会失败。" -ForegroundColor Red
     } else {
         Write-Host "pynini wheel 预安装成功。" -ForegroundColor Green
+        Repair-PyniniPackageVersion -PythonExe $PythonExe
     }
 }
 
