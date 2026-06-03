@@ -83,154 +83,7 @@ if ($pythonCandidates.Count -eq 0) {
 
 Write-Host "使用的 Python 路径: $pythonExe" -ForegroundColor Cyan
 
-function Repair-PyniniPackageVersion {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$PythonExe
-    )
-
-    $repairScriptLines = @(
-        "import csv"
-        "import importlib.metadata as metadata"
-        "import io"
-        "import re"
-        "import shutil"
-        "import sys"
-        "import sysconfig"
-        "from pathlib import Path"
-        ""
-        "TARGET_VERSION = '2.1.6'"
-        "WHEEL_VERSION = '2.1.6.post1'"
-        "TARGET_DIST_INFO = 'pynini-2.1.6.dist-info'"
-        ""
-        "def read_metadata_version(metadata_file):"
-        "    data = metadata_file.read_bytes()"
-        "    name_match = re.search(br'(?m)^Name: ([^\r\n]+)', data)"
-        "    version_match = re.search(br'(?m)^Version: ([^\r\n]+)', data)"
-        "    package_name = name_match.group(1).decode('ascii', 'replace').lower() if name_match else ''"
-        "    package_version = version_match.group(1).decode('ascii', 'replace') if version_match else ''"
-        "    return data, package_name, package_version"
-        ""
-        "def collect_site_roots():"
-        "    roots = []"
-        "    for key in ('purelib', 'platlib'):"
-        "        value = sysconfig.get_paths().get(key)"
-        "        if value:"
-        "            roots.append(Path(value))"
-        "    try:"
-        "        dist = metadata.distribution('pynini')"
-        "        root = Path(dist.locate_file(''))"
-        "        roots.append(root)"
-        "        dist_path = Path(getattr(dist, '_path', '') or '')"
-        "        if dist_path:"
-        "            roots.append(dist_path.parent)"
-        "    except metadata.PackageNotFoundError:"
-        "        pass"
-        "    existing = []"
-        "    for root in roots:"
-        "        try:"
-        "            resolved = root.resolve()"
-        "        except OSError:"
-        "            resolved = root"
-        "        if resolved.exists() and resolved not in existing:"
-        "            existing.append(resolved)"
-        "    return existing"
-        ""
-        "def find_pynini_dist_infos():"
-        "    found = []"
-        "    for root in collect_site_roots():"
-        "        for dist_info in root.glob('*.dist-info'):"
-        "            if not dist_info.name.lower().startswith('pynini-'):"
-        "                continue"
-        "            metadata_file = dist_info / 'METADATA'"
-        "            if not metadata_file.exists():"
-        "                continue"
-        "            data, package_name, package_version = read_metadata_version(metadata_file)"
-        "            if package_name == 'pynini' or dist_info.name.lower().startswith('pynini-'):"
-        "                found.append((dist_info, metadata_file, data, package_version))"
-        "    unique = []"
-        "    seen = set()"
-        "    for item in found:"
-        "        key = str(item[0]).lower()"
-        "        if key not in seen:"
-        "            seen.add(key)"
-        "            unique.append(item)"
-        "    return unique"
-        ""
-        "def rewrite_record(dist_info, old_name=None):"
-        "    record_file = dist_info / 'RECORD'"
-        "    if not record_file.exists():"
-        "        return"
-        "    rows = list(csv.reader(io.StringIO(record_file.read_text(encoding='utf-8'))))"
-        "    output = io.StringIO()"
-        "    writer = csv.writer(output, lineterminator='\n')"
-        "    for row in rows:"
-        "        if row:"
-        "            path = row[0].replace('\\\\', '/')"
-        "            if old_name and path.startswith(old_name + '/'):"
-        "                row[0] = TARGET_DIST_INFO + path[len(old_name):]"
-        "                path = row[0].replace('\\\\', '/')"
-        "            if path in (TARGET_DIST_INFO + '/METADATA', TARGET_DIST_INFO + '/RECORD'):"
-        "                row = [row[0], '', '']"
-        "        writer.writerow(row)"
-        "    record_file.write_text(output.getvalue(), encoding='utf-8')"
-        ""
-        "try:"
-        "    metadata.distribution('pynini')"
-        "except metadata.PackageNotFoundError:"
-        "    print('pynini is not installed')"
-        "    sys.exit(1)"
-        ""
-        "dist_infos = find_pynini_dist_infos()"
-        "if not dist_infos:"
-        "    print('pynini METADATA file was not found')"
-        "    sys.exit(1)"
-        ""
-        "patched = []"
-        "for dist_info, metadata_file, data, package_version in dist_infos:"
-        "    old_name = dist_info.name"
-        "    if package_version == WHEEL_VERSION:"
-        "        metadata_file.write_bytes(re.sub(br'(?m)^Version: 2\.1\.6\.post1$', b'Version: 2.1.6', data, count=1))"
-        "    elif package_version != TARGET_VERSION:"
-        "        print('unexpected pynini metadata version in {}: {}'.format(dist_info, package_version))"
-        "        sys.exit(1)"
-        ""
-        "    target_dist_info = dist_info.parent / TARGET_DIST_INFO"
-        "    if dist_info.name != TARGET_DIST_INFO:"
-        "        if target_dist_info.exists():"
-        "            shutil.rmtree(target_dist_info)"
-        "        shutil.move(str(dist_info), str(target_dist_info))"
-        "        dist_info = target_dist_info"
-        ""
-        "    rewrite_record(dist_info, old_name=old_name)"
-        "    patched.append(str(dist_info))"
-        ""
-        "print('patched pynini dist-info: {}'.format('; '.join(patched)))"
-    )
-
-    Write-Host "正在将 pynini 包元数据版本修正为 2.1.6，以满足 WeTextProcessing 依赖声明..."
-    $repairOutput = & $PythonExe -c ($repairScriptLines -join "`n") 2>&1
-    $repairExitCode = $LASTEXITCODE
-    foreach ($line in $repairOutput) {
-        Write-Host $line
-    }
-
-    if ($repairExitCode -ne 0) {
-        Write-Host "pynini 版本元数据修正失败，后续依赖解析可能仍会认为版本不匹配。" -ForegroundColor Red
-        return $false
-    } else {
-        $visiblePyniniVersion = & $PythonExe -c "import importlib.metadata as m; print(m.version('pynini'))" 2>$null
-        if ($LASTEXITCODE -ne 0 -or "$visiblePyniniVersion".Trim() -ne "2.1.6") {
-            Write-Host "pynini 版本元数据修正后仍显示为 $visiblePyniniVersion，后续依赖解析可能仍会认为版本不匹配。" -ForegroundColor Red
-            return $false
-        } else {
-            Write-Host "pynini 版本元数据修正完成，当前可见版本: $visiblePyniniVersion" -ForegroundColor Green
-            return $true
-        }
-    }
-}
-
-function Install-IndexTTS2PyniniWheel {
+function Install-IndexTTS2Dependencies {
     param(
         [Parameter(Mandatory = $true)]
         [string]$PythonExe
@@ -243,18 +96,18 @@ function Install-IndexTTS2PyniniWheel {
         "3.13" = "https://github.com/billwuhao/pynini-windows-wheels/releases/download/v2.1.6.post1/pynini-2.1.6.post1-cp313-cp313-win_amd64.whl"
     }
 
-    Write-Host "准备为 Light-IndexTTS2 预安装 Windows pynini wheel..." -ForegroundColor Cyan
+    Write-Host "准备为 Light-IndexTTS2 安装专用依赖..." -ForegroundColor Cyan
 
     $pythonInfo = & $PythonExe -c "import platform, sys; print(f'{sys.version_info.major}.{sys.version_info.minor}|{platform.system()}|{platform.machine()}|{sys.maxsize > 2**32}')"
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($pythonInfo)) {
-        Write-Host "无法检测 Python 版本信息，跳过 pynini 预安装。" -ForegroundColor Yellow
-        return $true
+        Write-Host "无法检测 Python 版本信息，跳过 Light-IndexTTS2 专用依赖安装。" -ForegroundColor Red
+        return $false
     }
 
     $parts = $pythonInfo.Trim().Split('|')
     if ($parts.Count -lt 4) {
-        Write-Host "Python 版本信息格式异常，跳过 pynini 预安装: $pythonInfo" -ForegroundColor Yellow
-        return $true
+        Write-Host "Python 版本信息格式异常，跳过 Light-IndexTTS2 专用依赖安装: $pythonInfo" -ForegroundColor Red
+        return $false
     }
 
     $pythonVersion = $parts[0]
@@ -263,36 +116,55 @@ function Install-IndexTTS2PyniniWheel {
     $is64Bit = ($parts[3] -eq "True")
 
     if ($platformSystem -ne "Windows" -or -not $is64Bit -or $platformMachine -notin @("amd64", "x86_64")) {
-        Write-Host "当前环境不是 64 位 Windows，跳过 pynini Windows wheel 预安装。" -ForegroundColor Yellow
-        return $true
-    }
-
-    if (-not $pyniniWheelUrls.ContainsKey($pythonVersion)) {
-        Write-Host "当前 Python $pythonVersion 没有预设的 pynini wheel，跳过预安装。" -ForegroundColor Yellow
+        Write-Host "当前环境不是 64 位 Windows，跳过 Light-IndexTTS2 专用依赖安装。" -ForegroundColor Red
         return $false
     }
 
-    & $PythonExe -c "import pynini" 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "已检测到 pynini，可跳过预安装。" -ForegroundColor Green
-        return (Repair-PyniniPackageVersion -PythonExe $PythonExe)
+    if (-not $pyniniWheelUrls.ContainsKey($pythonVersion)) {
+        Write-Host "当前 Python $pythonVersion 没有预设的 pynini wheel，跳过 Light-IndexTTS2 依赖安装以避免编译 pynini 源码。" -ForegroundColor Red
+        return $false
     }
 
     $wheelUrl = $pyniniWheelUrls[$pythonVersion]
     Write-Host "正在安装匹配的 pynini wheel: $wheelUrl"
-    $pipOutput = & $PythonExe -m pip install $wheelUrl 2>&1
+    $pipOutput = & $PythonExe -m pip install --force-reinstall $wheelUrl 2>&1
     $pipExitCode = $LASTEXITCODE
     foreach ($line in $pipOutput) {
         Write-Host $line
     }
 
     if ($pipExitCode -ne 0) {
-        Write-Host "pynini wheel 安装失败，后续 WeTextProcessing 依赖安装可能仍会失败。" -ForegroundColor Red
+        Write-Host "pynini wheel 安装失败，跳过 Light-IndexTTS2 依赖安装。" -ForegroundColor Red
         return $false
-    } else {
-        Write-Host "pynini wheel 预安装成功。" -ForegroundColor Green
-        return (Repair-PyniniPackageVersion -PythonExe $PythonExe)
     }
+
+    Write-Host "pynini wheel 安装成功。" -ForegroundColor Green
+    Write-Host "正在安装 sentencepiece（使用中科大镜像）..."
+    $sentencepieceOutput = & $PythonExe -m pip install sentencepiece --index-url https://mirrors.ustc.edu.cn/pypi/simple 2>&1
+    $sentencepieceExitCode = $LASTEXITCODE
+    foreach ($line in $sentencepieceOutput) {
+        Write-Host $line
+    }
+
+    if ($sentencepieceExitCode -ne 0) {
+        Write-Host "sentencepiece 安装失败，跳过 WeTextProcessing 安装。" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "正在无依赖安装 WeTextProcessing（使用中科大镜像）..."
+    $wetextOutput = & $PythonExe -m pip install WeTextProcessing --no-deps --index-url https://mirrors.ustc.edu.cn/pypi/simple 2>&1
+    $wetextExitCode = $LASTEXITCODE
+    foreach ($line in $wetextOutput) {
+        Write-Host $line
+    }
+
+    if ($wetextExitCode -ne 0) {
+        Write-Host "WeTextProcessing 无依赖安装失败。" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "Light-IndexTTS2 专用依赖安装成功。" -ForegroundColor Green
+    return $true
 }
 
 # 5. 要安装的仓库列表
@@ -330,15 +202,15 @@ foreach ($repoUrl in $repos) {
 
     # 安装依赖
     $reqFile = Join-Path $targetPath "requirements.txt"
-    if (Test-Path $reqFile) {
-        if ($repoName -eq "ComfyUI-Light-IndexTTS2") {
-            $pyniniReady = Install-IndexTTS2PyniniWheel -PythonExe $pythonExe
-            if (-not $pyniniReady) {
-                Write-Host "pynini 预安装或版本修正未完成，跳过 Light-IndexTTS2 依赖安装以避免编译 pynini 源码。" -ForegroundColor Red
-                continue
-            }
+    if ($repoName -eq "ComfyUI-Light-IndexTTS2") {
+        $indexTTS2DepsReady = Install-IndexTTS2Dependencies -PythonExe $pythonExe
+        if (-not $indexTTS2DepsReady) {
+            Write-Host "Light-IndexTTS2 专用依赖安装失败，请检查上述输出。" -ForegroundColor Red
         }
+        continue
+    }
 
+    if (Test-Path $reqFile) {
         Write-Host "检测到 requirements.txt，正在安装依赖（使用中科大镜像）..."
         & $pythonExe -m pip install -r $reqFile --index-url https://mirrors.ustc.edu.cn/pypi/simple
         if ($LASTEXITCODE -ne 0) {
