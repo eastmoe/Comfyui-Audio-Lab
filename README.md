@@ -19,6 +19,7 @@ python3 -m http.server 4173
 | MSST | 音频源分离、人声/伴奏/和声/混响/乐器分离、音频修复与高清化、歌声转 MIDI。 | https://github.com/eastmoe/ComfyUI-MSST |
 | So-VITS-SVC | 基于 So-VITS-SVC 的 AI 声音转换节点，支持声音克隆与 AI 翻唱。 | https://github.com/eastmoe/ComfyUI-so-vits-svc |
 | DDSP-SVC | 基于 DDSP-SVC 的轻量高效 AI 翻唱节点，用于声线迁移与快速推理。 | https://github.com/eastmoe/ComfyUI-DDSP-SVC |
+| Easy RVC | 面向 ComfyUI 的纯推理 RVC 声线转换节点，原生支持 AUDIO、音高调整、FAISS 特征索引、多种 F0 方法、模型缓存及依赖权重自动下载。 | https://github.com/eastmoe/ComfyUI-Easy-RVC |
 | Easy SongGeneration | 一站式歌曲生成节点，从歌词到完整歌曲，生成旋律、编曲与人声。 | https://github.com/eastmoe/ComfyUI-Easy-SongGeneration |
 | MIMOASR | 高精度语音转录节点，支持 ASS/SRT 字幕文件生成。 | https://github.com/eastmoe/ComfyUI-MIMOASR |
 | Light IndexTTS2 | IndexTTS2 的轻量级工程实现，用于高效文本转语音。 | https://github.com/eastmoe/ComfyUI-Light-IndexTTS2 |

@@ -174,6 +174,7 @@ $repos = @(
     "https://github.com/eastmoe/ComfyUI-MSST",
     "https://github.com/eastmoe/ComfyUI-so-vits-svc",
     "https://github.com/eastmoe/ComfyUI-DDSP-SVC",
+    "https://github.com/eastmoe/ComfyUI-Easy-RVC",
     "https://github.com/eastmoe/ComfyUI-Easy-SongGeneration",
     "https://github.com/eastmoe/ComfyUI-MIMOASR",
     "https://github.com/eastmoe/ComfyUI-Light-IndexTTS2",
